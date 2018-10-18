@@ -22,8 +22,12 @@ namespace CorcoAlgebra
 
 		// pre-increment operator
 		mat_iterator& operator++() { ++m_Ptr; return *this; }
+		// pre-decrement operator
+		mat_iterator& operator--() { --m_Ptr; return *this; }
 		// post-increment operator
 		mat_iterator operator++(int Dummy) { return mat_iterator(++m_Ptr); }
+		// post-decrement operator
+		mat_iterator operator--(int Dummy) { return mat_iterator(--m_Ptr); }
 
 		// Equality/ inequality operators
 		bool operator==(const mat_iterator& rhs) const { return m_Ptr == rhs.m_Ptr; }
@@ -44,6 +48,10 @@ namespace CorcoAlgebra
 		// Iterators
 		typedef mat_iterator<T> iterator;
 		typedef mat_iterator<const T> const_iterator;
+
+		typedef std::reverse_iterator<iterator> reverse_iterator;
+		typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+
 		typedef iterator row_iterator;
 		typedef const_iterator const_row_iterator;
 
@@ -69,8 +77,17 @@ namespace CorcoAlgebra
 		const_iterator begin() const;
 		const_iterator end() const;
 
-		const_iterator cbegin() const;
-		const_iterator cend() const;
+		const_iterator cbegin() const noexcept;
+		const_iterator cend() const noexcept;
+
+		reverse_iterator rbegin();
+		reverse_iterator rend();
+
+		const_reverse_iterator rbegin() const;
+		const_reverse_iterator rend() const;
+
+		const_reverse_iterator crbegin() const noexcept;
+		const_reverse_iterator crend() const noexcept;
 
 		row_iterator begin_row(const size_t Row);
 		row_iterator end_row(const size_t Row);
@@ -157,7 +174,13 @@ namespace CorcoAlgebra
 		const size_t ElementPosition = (Row * m_NumberOfCols) + Column;
 		return mp_MatData[ElementPosition];
 	}
-	
+
+	/*===============================================================
+	 *
+	 *==================> STANDARD ITERATORS <=======================
+	 *
+	 *===============================================================
+	 */
 	template<typename T>
 	typename Mat<T>::iterator Mat<T>::begin()
 	{
@@ -183,17 +206,65 @@ namespace CorcoAlgebra
 	}
 
 	template<typename T>
-	typename Mat<T>::const_iterator Mat<T>::cbegin() const
+	typename Mat<T>::const_iterator Mat<T>::cbegin() const noexcept
 	{
 		return const_iterator(mp_MatData.get());
 	}
 
 	template<typename T>
-	typename Mat<T>::const_iterator Mat<T>::cend() const
+	typename Mat<T>::const_iterator Mat<T>::cend() const noexcept
 	{
 		return const_iterator(mp_MatData.get() + m_Size);
 	}
 
+	/*===============================================================
+	 *
+	 *===================> REVERSE ITERATORS <=======================
+	 *
+	 *===============================================================
+	 */
+	template<typename T>
+	typename Mat<T>::reverse_iterator Mat<T>::rbegin()
+	{
+		return reverse_iterator(mp_MatData.get() + m_Size);
+	}
+
+	template<typename T>
+	typename Mat<T>::reverse_iterator Mat<T>::rend()
+	{
+		return reverse_iterator(mp_MatData.get());
+	}
+
+	template<typename T>
+	typename Mat<T>::const_reverse_iterator Mat<T>::rbegin() const
+	{
+		return const_reverse_iterator(mp_MatData.get() + m_Size);
+	}
+
+	template<typename T>
+	typename Mat<T>::const_reverse_iterator Mat<T>::rend() const
+	{
+		return const_reverse_iterator(mp_MatData.get());
+	}
+
+	template<typename T>
+	typename Mat<T>::const_reverse_iterator Mat<T>::crbegin() const noexcept
+	{
+		return const_reverse_iterator(mp_MatData.get() + m_Size);
+	}
+
+	template<typename T>
+	typename Mat<T>::const_reverse_iterator Mat<T>::crend() const noexcept
+	{
+		return const_reverse_iterator(mp_MatData.get());
+	}
+
+	/*===============================================================
+	 *
+	 *======================> ROW ITERATORS <========================
+	 *
+	 *===============================================================
+	 */
 	template<typename T>
 	typename Mat<T>::row_iterator Mat<T>::begin_row(const size_t Row)
 	{
@@ -259,11 +330,11 @@ namespace CorcoAlgebra
 		const size_t offset = m_NumberOfCols*(Row+1);
 		return const_row_iterator(mp_MatData.get() + offset);
 	}
-}
 
-using imat 		= CorcoAlgebra::Mat<int>;
-using uimat 	= CorcoAlgebra::Mat<unsigned int>;
-using fmat 		= CorcoAlgebra::Mat<float>;
-using dmat 		= CorcoAlgebra::Mat<double>;
+	using imat = CorcoAlgebra::Mat<int>;
+	using fmat = CorcoAlgebra::Mat<float>;
+	using dmat = CorcoAlgebra::Mat<double>;
+	using uimat = CorcoAlgebra::Mat<unsigned int>;
+}
 
 #endif
