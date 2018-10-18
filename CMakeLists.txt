@@ -17,3 +17,7 @@ add_executable(CorcovadoTests ${TEST_SOURCES})
 
 #Link tests against gtest and pthreads
 target_link_libraries(CorcovadoTests gtest Threads::Threads)
+
+if(CMAKE_COMPILER_IS_GNUCC)
+	target_compile_options(CorcovadoTests PRIVATE "-Wall")
+endif()

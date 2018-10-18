@@ -3,13 +3,50 @@
 
 #include <cstddef>
 #include <memory>
+#include <iterator>
 
 namespace CorcoAlgebra
 {
+
+	template<typename T>
+	class mat_iterator
+	{
+	public:
+		typedef T value_type;
+		typedef T& reference;
+		typedef T* pointer;
+		typedef std::input_iterator_tag iterator_category;
+		typedef ptrdiff_t difference_type;
+
+		mat_iterator(pointer ptr) : m_Ptr(ptr) {}
+
+		// pre-increment operator
+		mat_iterator& operator++() { ++m_Ptr; return *this; }
+		// post-increment operator
+		mat_iterator operator++(int Dummy) { return mat_iterator(++m_Ptr); }
+
+		// Equality/ inequality operators
+		bool operator==(const mat_iterator& rhs) const { return m_Ptr == rhs.m_Ptr; }
+		bool operator!=(const mat_iterator& rhs) const { return m_Ptr != rhs.m_Ptr; }
+
+		// dereferenced
+		reference operator*() { return *m_Ptr; }
+		pointer operator->() { return m_Ptr; }
+
+	private:
+		pointer m_Ptr;
+	};
+
 	template<typename T>
 	class Mat
 	{
 	public:
+		// Iterators
+		typedef mat_iterator<T> iterator;
+		typedef mat_iterator<const T> const_iterator;
+		typedef iterator row_iterator;
+		typedef const_iterator const_row_iterator;
+
 		// Constructors
 		Mat(const std::size_t Rows, const std::size_t Columns);
 		Mat(const std::size_t Rows, const std::size_t Columns, const T& DefaultValue);
@@ -25,6 +62,24 @@ namespace CorcoAlgebra
 		// Element Access methods
 		T& at(const std::size_t Row, const std::size_t Column);
 		const T& at(const std::size_t Row, const std::size_t Column) const;
+
+		iterator begin();
+		iterator end();
+
+		const_iterator begin() const;
+		const_iterator end() const;
+
+		const_iterator cbegin() const;
+		const_iterator cend() const;
+
+		row_iterator begin_row(const size_t Row);
+		row_iterator end_row(const size_t Row);
+
+		const_row_iterator begin_row(const size_t Row) const;
+		const_row_iterator end_row(const size_t Row) const;
+
+		const_row_iterator cbegin_row(const size_t Row) const;
+		const_row_iterator cend_row(const size_t Row) const;
 
 	private:
 		std::unique_ptr<T[]> mp_MatData;
@@ -101,6 +156,108 @@ namespace CorcoAlgebra
 		}
 		const size_t ElementPosition = (Row * m_NumberOfCols) + Column;
 		return mp_MatData[ElementPosition];
+	}
+	
+	template<typename T>
+	typename Mat<T>::iterator Mat<T>::begin()
+	{
+		return iterator(mp_MatData.get());
+	}
+
+	template<typename T>
+	typename Mat<T>::iterator Mat<T>::end()
+	{
+		return iterator(mp_MatData.get() + m_Size);
+	}
+
+	template<typename T>
+	typename Mat<T>::const_iterator Mat<T>::begin() const
+	{
+		return const_iterator(mp_MatData.get());
+	}
+
+	template<typename T>
+	typename Mat<T>::const_iterator Mat<T>::end() const
+	{
+		return const_iterator(mp_MatData.get() + m_Size);
+	}
+
+	template<typename T>
+	typename Mat<T>::const_iterator Mat<T>::cbegin() const
+	{
+		return const_iterator(mp_MatData.get());
+	}
+
+	template<typename T>
+	typename Mat<T>::const_iterator Mat<T>::cend() const
+	{
+		return const_iterator(mp_MatData.get() + m_Size);
+	}
+
+	template<typename T>
+	typename Mat<T>::row_iterator Mat<T>::begin_row(const size_t Row)
+	{
+		if(Row >= m_NumberOfRows)
+		{
+			throw std::out_of_range("Row index out of range");
+		}
+		const size_t offset = m_NumberOfCols*Row;
+		return row_iterator(mp_MatData.get() + offset);
+	}
+
+	template<typename T>
+	typename Mat<T>::row_iterator Mat<T>::end_row(const size_t Row)
+	{
+		if(Row >= m_NumberOfRows)
+		{
+			throw std::out_of_range("Row index out of range");
+		}
+		const size_t offset = m_NumberOfCols*(Row+1);
+		return row_iterator(mp_MatData.get() + offset);
+	}
+
+	template<typename T>
+	typename Mat<T>::const_row_iterator Mat<T>::begin_row(const size_t Row) const
+	{
+		if(Row >= m_NumberOfRows)
+		{
+			throw std::out_of_range("Row index out of range");
+		}
+		const size_t offset = m_NumberOfCols*Row;
+		return const_row_iterator(mp_MatData.get() + offset);
+	}
+
+	template<typename T>
+	typename Mat<T>::const_row_iterator Mat<T>::end_row(const size_t Row) const
+	{
+		if(Row >= m_NumberOfRows)
+		{
+			throw std::out_of_range("Row index out of range");
+		}
+		const size_t offset = m_NumberOfCols*(Row+1);
+		return const_row_iterator(mp_MatData.get() + offset);
+	}
+	
+	template<typename T>
+	typename Mat<T>::const_row_iterator Mat<T>::cbegin_row(const size_t Row) const
+	{
+		if(Row >= m_NumberOfRows)
+		{
+			throw std::out_of_range("Row index out of range");
+		}
+		const size_t offset = m_NumberOfCols*Row;
+		return const_row_iterator(mp_MatData.get() + offset);
+	}
+	
+	template<typename T>
+	typename Mat<T>::const_row_iterator Mat<T>::cend_row(const size_t Row) const
+	{
+		if(Row >= m_NumberOfRows)
+		{
+			throw std::out_of_range("Row index out of range");
+		}
+		const size_t offset = m_NumberOfCols*(Row+1);
+		return const_row_iterator(mp_MatData.get() + offset);
 	}
 }
 
