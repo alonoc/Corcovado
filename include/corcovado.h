@@ -99,6 +99,10 @@ namespace CorcoAlgebra
 		Mat(const Mat<T>& Rhs);
 		Mat(Mat<T>&& Lhs);
 
+		// Assign Operators
+		Mat<T>& operator=(const Mat<T>& Rhs);
+		Mat<T>& operator=(Mat<T>&& Lhs);
+
 		// Destructor
 		virtual ~Mat();
 
@@ -225,6 +229,40 @@ namespace CorcoAlgebra
 		Lhs.m_Size = 0;
 	}
 
+	template<typename T>
+	Mat<T>& Mat<T>::operator=(const Mat<T>& Rhs)
+	{
+		if(this != &Rhs)
+		{
+			m_NumberOfRows = Rhs.m_NumberOfRows;
+			m_NumberOfCols = Rhs.m_NumberOfCols;
+			// If sizes are different then we have to allocate memory
+			if(Rhs.m_Size != m_Size)
+			{
+				m_Size = Rhs.m_Size;
+				mp_MatData.reset(new T[m_Size]);
+			}
+			std::copy(Rhs.mp_MatData.get(), Rhs.mp_MatData.get() + Rhs.m_Size, mp_MatData.get());
+		}
+		return *this;
+	}
+	
+	template<typename T>
+	Mat<T>& Mat<T>::operator=(Mat<T>&& Lhs)
+	{
+		// Take members of LHS
+		m_NumberOfRows = Lhs.m_NumberOfRows;
+		m_NumberOfCols = Lhs.m_NumberOfCols;
+		m_Size = Lhs.m_Size;
+		mp_MatData = std::move(Lhs.mp_MatData);
+		
+		// Set LHS members to invalid values
+		Lhs.m_NumberOfRows = 0;
+		Lhs.m_NumberOfCols = 0;
+		Lhs.m_Size = 0;
+		return *this;
+	}
+	
 	template<typename T>
 	Mat<T>::~Mat()
 	{
