@@ -4,6 +4,9 @@
 #include <cstddef>
 #include <memory>
 #include <iterator>
+#include <initializer_list>
+#include <algorithm>
+#include <stdexcept>
 
 namespace CorcoAlgebra
 {
@@ -82,19 +85,19 @@ namespace CorcoAlgebra
 		// Iterators
 		typedef mat_iterator<T> iterator;
 		typedef mat_iterator<const T> const_iterator;
-
 		typedef std::reverse_iterator<iterator> reverse_iterator;
 		typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
-
 		typedef iterator row_iterator;
 		typedef const_iterator const_row_iterator;
-
 		typedef mat_col_iterator<T> col_iterator;
 		typedef mat_col_iterator<const T> const_col_iterator;
 
 		// Constructors
 		Mat(const std::size_t Rows, const std::size_t Columns);
 		Mat(const std::size_t Rows, const std::size_t Columns, const T& DefaultValue);
+		Mat(const std::initializer_list<std::initializer_list<T>>& InitMat);
+		Mat(const Mat<T>& Rhs);
+		Mat(Mat<T>&& Lhs);
 
 		// Destructor
 		virtual ~Mat();
@@ -111,40 +114,32 @@ namespace CorcoAlgebra
 		// Standard Iterators
 		iterator begin();
 		iterator end();
-
 		const_iterator begin() const;
 		const_iterator end() const;
-
 		const_iterator cbegin() const noexcept;
 		const_iterator cend() const noexcept;
 
 		// Reverse Iterators
 		reverse_iterator rbegin();
 		reverse_iterator rend();
-
 		const_reverse_iterator rbegin() const;
 		const_reverse_iterator rend() const;
-
 		const_reverse_iterator crbegin() const noexcept;
 		const_reverse_iterator crend() const noexcept;
 
 		// Row Iterators
 		row_iterator begin_row(const std::size_t Row);
 		row_iterator end_row(const std::size_t Row);
-
 		const_row_iterator begin_row(const std::size_t Row) const;
 		const_row_iterator end_row(const std::size_t Row) const;
-
 		const_row_iterator cbegin_row(const std::size_t Row) const;
 		const_row_iterator cend_row(const std::size_t Row) const;
 
 		// Col Iterators
 		col_iterator begin_col(const std::size_t Col);
 		col_iterator end_col(const std::size_t Col);
-
 		const_col_iterator begin_col(const std::size_t Col) const;
 		const_col_iterator end_col(const std::size_t Col) const;
-
 		const_col_iterator cbegin_col(const std::size_t Col) const;
 		const_col_iterator cend_col(const std::size_t Col) const;
 
@@ -168,7 +163,66 @@ namespace CorcoAlgebra
 	template<typename T>
 	Mat<T>::Mat(const std::size_t Rows, const std::size_t Columns, const T& DefaultValue) : Mat(Rows, Columns)
 	{
-		std::fill(&mp_MatData[0], &mp_MatData[0] + m_Size, DefaultValue);
+		std::fill(mp_MatData.get(), mp_MatData.get() + m_Size, DefaultValue);
+	}
+
+	template<typename T>
+	Mat<T>::Mat(const std::initializer_list<std::initializer_list<T>>& InitMat)
+	{
+		if(0 == InitMat.size())
+		{
+			throw std::invalid_argument("Is not possible to create an empty matrix");
+		}
+		else if(0 == InitMat.begin()->size())
+		{
+			throw std::invalid_argument("Is not possible to create a matrix with zero columns");
+		}
+
+		size_t PosOfRowFirstElement = 0;
+		m_NumberOfRows = InitMat.size();
+		m_NumberOfCols = InitMat.begin()->size();
+		m_Size = m_NumberOfRows*m_NumberOfCols;
+		mp_MatData.reset(new T[m_Size]);
+
+		for(const auto& RowList : InitMat)
+		{
+			const size_t ColSize = RowList.size();
+			if(ColSize != m_NumberOfCols)
+			{
+				throw std::invalid_argument("Is not possible to create a matrix with a different number of columns per row");
+			}
+			std::copy(RowList.begin(), RowList.end(), &mp_MatData[PosOfRowFirstElement]);
+			PosOfRowFirstElement += m_NumberOfCols;
+		}
+	}
+
+	template<typename T>
+	Mat<T>::Mat(const Mat<T>& Rhs)
+	{
+		if(0 == Rhs.m_NumberOfRows || 0 == Rhs.m_NumberOfCols || nullptr == Rhs.mp_MatData)
+		{
+			throw std::invalid_argument("To copy constructor a matrix, the other matrix should be a valid one (Rows and columns != 0 and the data differnet than nullptr)");
+		}
+		m_NumberOfRows = Rhs.m_NumberOfRows;
+		m_NumberOfCols = Rhs.m_NumberOfCols;
+		m_Size = Rhs.m_Size;
+		mp_MatData.reset(new T[m_Size]);
+		std::copy(Rhs.mp_MatData.get(), Rhs.mp_MatData.get() + Rhs.m_Size, mp_MatData.get());
+	}
+
+	template<typename T>
+	Mat<T>::Mat(Mat<T>&& Lhs)
+	{		
+		// Take members of LHS
+		m_NumberOfRows = Lhs.m_NumberOfRows;
+		m_NumberOfCols = Lhs.m_NumberOfCols;
+		m_Size = Lhs.m_Size;
+		mp_MatData = std::move(Lhs.mp_MatData);
+		
+		// Set Lhs members to invalid values
+		Lhs.m_NumberOfRows = 0;
+		Lhs.m_NumberOfCols = 0;
+		Lhs.m_Size = 0;
 	}
 
 	template<typename T>
@@ -224,6 +278,7 @@ namespace CorcoAlgebra
 		const size_t ElementPosition = (Row * m_NumberOfCols) + Column;
 		return mp_MatData[ElementPosition];
 	}
+
 
 	/*===============================================================
 	 *
