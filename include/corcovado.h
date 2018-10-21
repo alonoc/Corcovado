@@ -128,6 +128,7 @@ namespace CorcoAlgebra
 		// Arithmetic Operators
 		Mat<T> operator+(const Mat<T>& Rhs) const;
 		Mat<T> operator-(const Mat<T>& Rhs) const;
+		Mat<T> operator*(const T& Scalar) const;
 
 		// Standard Iterators
 		iterator begin();
@@ -356,6 +357,16 @@ namespace CorcoAlgebra
 		auto result_it = result.begin();
 		auto subtraction = [&result_it](const T& Val1, const T& Val2){ *result_it = Val1 - Val2; ++result_it; };
 		for_each(this->cbegin(), this->cend(), Rhs.cbegin(), Rhs.cend(), subtraction);
+		return result;
+	}
+	
+	template<typename T>
+	Mat<T> Mat<T>::operator*(const T& Scalar) const
+	{
+		Mat<T> result(this->m_NumberOfRows, this->m_NumberOfCols);
+		auto result_it = result.begin();
+		auto multiplication = [&result_it, &Scalar](const T& Value){ *result_it = Value * Scalar; ++result_it; };
+		std::for_each(this->cbegin(), this->cend(), multiplication);
 		return result;
 	}
 
