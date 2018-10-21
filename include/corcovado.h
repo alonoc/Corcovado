@@ -74,8 +74,9 @@ namespace CorcoAlgebra
 		pointer operator->() { return m_Ptr; }
 		
 	private:
-		std::size_t m_NumberOfCols;
+		
 		pointer m_Ptr;
+		std::size_t m_NumberOfCols;
 	};
 
 	template<typename InputIt, typename BinaryOp>
@@ -329,7 +330,7 @@ namespace CorcoAlgebra
 		const size_t ElementPosition = (Row * m_NumberOfCols) + Column;
 		return mp_MatData[ElementPosition];
 	}
-	
+
 	template<typename T>
 	Mat<T> Mat<T>::operator+(const Mat<T>& Rhs) const
 	{
@@ -343,7 +344,7 @@ namespace CorcoAlgebra
 		for_each(this->cbegin(), this->cend(), Rhs.cbegin(), Rhs.cend(), addition);
 		return result;
 	}
-	
+
 	template<typename T>
 	Mat<T> Mat<T>::operator-(const Mat<T>& Rhs) const
 	{
