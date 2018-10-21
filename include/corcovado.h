@@ -78,6 +78,15 @@ namespace CorcoAlgebra
 		pointer m_Ptr;
 	};
 
+	template<typename InputIt, typename BinaryOp>
+	void for_each(InputIt first1, InputIt last1, InputIt first2, InputIt last2, BinaryOp binary_op)
+	{
+		for(; first1 != last1 && first2 != last2; ++first1, ++first2)
+		{
+			binary_op(*first1, *first2);
+		}
+	}
+
 	template<typename T>
 	class Mat
 	{
@@ -114,6 +123,10 @@ namespace CorcoAlgebra
 		// Element Access methods
 		T& at(const std::size_t Row, const std::size_t Column);
 		const T& at(const std::size_t Row, const std::size_t Column) const;
+
+		// Arithmetic Operators
+		Mat<T> operator+(const Mat<T>& Rhs) const;
+		Mat<T> operator-(const Mat<T>& Rhs) const;
 
 		// Standard Iterators
 		iterator begin();
@@ -316,7 +329,34 @@ namespace CorcoAlgebra
 		const size_t ElementPosition = (Row * m_NumberOfCols) + Column;
 		return mp_MatData[ElementPosition];
 	}
-
+	
+	template<typename T>
+	Mat<T> Mat<T>::operator+(const Mat<T>& Rhs) const
+	{
+		if(Rhs.m_NumberOfRows != this->m_NumberOfRows || Rhs.m_NumberOfCols != this->m_NumberOfCols)
+		{
+			throw std::invalid_argument("Cannot add two matrices with a different number of rows or columns");
+		}
+		Mat<T> result(m_NumberOfRows, m_NumberOfCols);
+		auto result_it = result.begin();
+		auto addition = [&result_it](const T& Val1, const T& Val2){ *result_it = Val1 + Val2; ++result_it; };
+		for_each(this->cbegin(), this->cend(), Rhs.cbegin(), Rhs.cend(), addition);
+		return result;
+	}
+	
+	template<typename T>
+	Mat<T> Mat<T>::operator-(const Mat<T>& Rhs) const
+	{
+		if(Rhs.m_NumberOfRows != this->m_NumberOfRows || Rhs.m_NumberOfCols != this->m_NumberOfCols)
+		{
+			throw std::invalid_argument("Cannot subtract two matrices with a different number of rows or columns");
+		}
+		Mat<T> result(m_NumberOfRows, m_NumberOfCols);
+		auto result_it = result.begin();
+		auto subtraction = [&result_it](const T& Val1, const T& Val2){ *result_it = Val1 - Val2; ++result_it; };
+		for_each(this->cbegin(), this->cend(), Rhs.cbegin(), Rhs.cend(), subtraction);
+		return result;
+	}
 
 	/*===============================================================
 	 *
